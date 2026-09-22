@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">Nonograms</string>
+    <string name="new_game">New game</string>
+    <string name="clear">Clear</string>
+    <string name="close">Close</string>
+    <string name="generating">Generating…</string>
+    <string name="size_label">%1$d × %2$d</string>
+    <string name="solved_status">%1$s  ✔ Solved!</string>
+    <string name="choose_size">Choose board size</string>
+    <string name="clear_title">Clear the board?</string>
+    <string name="clear_message">This removes all your fills and crosses from the current puzzle.</string>
+    <string name="solved_title">Puzzle solved! 🎉</string>
+    <string name="solved_message">Nicely done – you completed the %1$d × %2$d puzzle.</string>
+    <string name="mode_fill">■  Fill mode  (tap to switch to cross)</string>
+    <string name="mode_cross">✕  Cross mode  (tap to switch to fill)</string>
+    <string name="help">Tap or drag to use the current tool · Hold, then drag to use the other tool\nTouch a marked square again to clear it · Pinch to zoom, two fingers to pan</string>
+</resources>
