@@ -10,7 +10,7 @@
     <string name="clear_title">Clear the board?</string>
     <string name="clear_message">This removes all your fills and crosses from the current puzzle.</string>
     <string name="solved_title">Puzzle solved! 🎉</string>
-    <string name="solved_message">Nicely done – you completed the %1$d × %2$d puzzle.</string>
+    <string name="solved_message">Nicely done – you completed the %1$d × %2$d puzzle in %3$s.</string>
     <string name="mode_fill">■  Fill mode  (tap to switch to cross)</string>
     <string name="mode_cross">✕  Cross mode  (tap to switch to fill)</string>
     <string name="help">Tap or drag to use the current tool · Hold, then drag to use the other tool\nTouch a marked square again to clear it · Pinch to zoom, two fingers to pan</string>
