@@ -60,6 +60,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         findViewById<MaterialButton>(R.id.btnNew).setOnClickListener { showSizeDialog() }
+        tvStatus.setOnClickListener { showSizeDialog() }
         btnClear.setOnClickListener { if (!solved) confirmClear() }
         btnMode.setOnClickListener {
             board.crossMode = !board.crossMode
