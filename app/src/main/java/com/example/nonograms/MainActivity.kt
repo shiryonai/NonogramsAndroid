@@ -1,6 +1,5 @@
 package com.example.nonograms
 
-import android.annotation.SuppressLint
 import android.content.res.ColorStateList
 import android.os.Bundle
 import android.os.Handler
@@ -16,7 +15,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var board: NonogramView
     private lateinit var tvStatus: TextView
     private lateinit var tvTimer: TextView
+    private lateinit var tvBest: TextView
     private lateinit var btnMode: MaterialButton
+    private lateinit var btnClear: MaterialButton
 
     private val sizes = intArrayOf(5, 10, 15, 20, 25)
     private var currentSize = 10
@@ -44,17 +45,22 @@ class MainActivity : AppCompatActivity() {
         board = findViewById(R.id.board)
         tvStatus = findViewById(R.id.tvStatus)
         tvTimer = findViewById(R.id.tvTimer)
+        tvBest = findViewById(R.id.tvBest)
         btnMode = findViewById(R.id.btnMode)
+        btnClear = findViewById(R.id.btnClear)
 
         board.onSolved = {
             solved = true
             pauseTimer()
+            btnClear.isEnabled = false
+            val isNewBest = BestTimes.submit(this, currentSize, elapsedMs())
             updateStatus()
-            showSolvedDialog()
+            updateBestLabel()
+            showSolvedDialog(isNewBest)
         }
 
         findViewById<MaterialButton>(R.id.btnNew).setOnClickListener { showSizeDialog() }
-        findViewById<MaterialButton>(R.id.btnClear).setOnClickListener { confirmClear() }
+        btnClear.setOnClickListener { if (!solved) confirmClear() }
         btnMode.setOnClickListener {
             board.crossMode = !board.crossMode
             updateModeButton()
@@ -73,6 +79,8 @@ class MainActivity : AppCompatActivity() {
         val token = ++generation
         tvStatus.text = getString(R.string.generating)
         board.inputEnabled = false
+        btnClear.isEnabled = false
+        updateBestLabel()
 
         // Generation is quick (tens of ms), but keep it off the UI thread anyway.
         Thread {
@@ -80,6 +88,7 @@ class MainActivity : AppCompatActivity() {
             runOnUiThread {
                 if (!isFinishing && !isDestroyed && token == generation) {
                     board.setPuzzle(puzzle)
+                    btnClear.isEnabled = true
                     updateStatus()
                     startTimer()
                 }
@@ -117,7 +126,6 @@ class MainActivity : AppCompatActivity() {
         tvTimer.text = formatTime(elapsedMs())
     }
 
-    @SuppressLint("DefaultLocale")
     private fun formatTime(ms: Long): String {
         val totalSeconds = ms / 1000
         val h = totalSeconds / 3600
@@ -141,6 +149,12 @@ class MainActivity : AppCompatActivity() {
         tvStatus.text = if (solved) getString(R.string.solved_status, label) else label
     }
 
+    private fun updateBestLabel() {
+        val best = BestTimes.get(this, currentSize)
+        tvBest.text = if (best != null) getString(R.string.best_time, formatTime(best))
+        else getString(R.string.best_time_none)
+    }
+
     private fun updateModeButton() {
         if (board.crossMode) {
             btnMode.text = getString(R.string.mode_cross)
@@ -152,7 +166,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showSizeDialog() {
-        val labels = Array(sizes.size) { getString(R.string.size_label, sizes[it], sizes[it]) }
+        val labels = Array(sizes.size) { i ->
+            val size = sizes[i]
+            val best = BestTimes.get(this, size)
+            if (best != null) getString(R.string.size_label_with_best, size, size, formatTime(best))
+            else getString(R.string.size_label_with_best_none, size, size)
+        }
         AlertDialog.Builder(this)
             .setTitle(R.string.choose_size)
             .setSingleChoiceItems(labels, sizes.indexOf(currentSize)) { dialog, which ->
@@ -168,18 +187,21 @@ class MainActivity : AppCompatActivity() {
             .setTitle(R.string.clear_title)
             .setMessage(R.string.clear_message)
             .setPositiveButton(R.string.clear) { _, _ ->
-                solved = false
-                board.clearBoard()
-                updateStatus()
+                if (!solved) {
+                    board.clearBoard()
+                    updateStatus()
+                }
             }
             .setNegativeButton(android.R.string.cancel, null)
             .show()
     }
 
-    private fun showSolvedDialog() {
+    private fun showSolvedDialog(isNewBest: Boolean) {
+        val message = getString(R.string.solved_message, currentSize, currentSize, formatTime(elapsedMs())) +
+                if (isNewBest) "\n\n" + getString(R.string.new_best) else ""
         AlertDialog.Builder(this)
             .setTitle(R.string.solved_title)
-            .setMessage(getString(R.string.solved_message, currentSize, currentSize, formatTime(elapsedMs())))
+            .setMessage(message)
             .setPositiveButton(R.string.new_game) { _, _ -> showSizeDialog() }
             .setNegativeButton(R.string.close, null)
             .show()
