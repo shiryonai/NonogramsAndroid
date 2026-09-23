@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
+import android.widget.ArrayAdapter
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -204,12 +205,22 @@ class MainActivity : AppCompatActivity() {
         val labels = Array(sizes.size) { i ->
             val size = sizes[i]
             val best = BestTimes.get(this, size)
-            if (best != null) getString(R.string.size_label_with_best, size, size, formatTime(best))
+            val raw = if (best != null) getString(R.string.size_label_with_best, size, size, formatTime(best))
             else getString(R.string.size_label_with_best_none, size, size)
+            // Single-digit sizes ("5") are one character narrower than the rest ("10".."25"),
+            // so their em dash lands slightly left of the others. A "figure space" is a
+            // Unicode space defined to match a digit's width in fonts that support it, so
+            // prefixing one nudges just the TEXT right. Unlike padding the row itself, this
+            // leaves the radio button (which is positioned by the row's own fixed padding,
+            // not by the text) exactly where it is on every row.
+            if (size < 10) "\u2007$raw" else raw
         }
+        // Uses the app's dialog_size_item layout (checkmark at the start) so every row's
+        // radio button lines up in a column regardless of the label text above.
+        val adapter = ArrayAdapter(this, R.layout.dialog_size_item, android.R.id.text1, labels)
         AlertDialog.Builder(this)
             .setTitle(R.string.choose_size)
-            .setSingleChoiceItems(labels, sizes.indexOf(currentSize)) { dialog, which ->
+            .setSingleChoiceItems(adapter, sizes.indexOf(currentSize)) { dialog, which ->
                 dialog.dismiss()
                 startGame(sizes[which])
             }
