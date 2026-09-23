@@ -68,7 +68,25 @@ class MainActivity : AppCompatActivity() {
         }
 
         updateModeButton()
-        startGame(currentSize)
+        if (!restoreSavedGame()) startGame(currentSize)
+    }
+
+    /** Restores a previously in-progress game, if one was saved. Returns true if it did. */
+    private fun restoreSavedGame(): Boolean {
+        val snapshot = GameStore.load(this) ?: return false
+        generation++   // invalidate any in-flight generator thread from a previous instance
+        currentSize = snapshot.size
+        solved = snapshot.solved
+        board.crossMode = snapshot.crossMode
+        board.setPuzzle(Puzzle(snapshot.size, snapshot.solution))
+        board.restoreState(snapshot.cells, locked = snapshot.solved)
+        btnClear.isEnabled = !solved
+        timerAccumulatedMs = snapshot.elapsedMs
+        updateTimerText()
+        updateModeButton()
+        updateStatus()
+        updateBestLabel()
+        return true
     }
 
     // ---------------------------------------------------------------------------------------
@@ -138,11 +156,27 @@ class MainActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         pauseTimer()
+        saveCurrentGame()
     }
 
     override fun onResume() {
         super.onResume()
         if (!solved && board.inputEnabled) startTimer()
+    }
+
+    private fun saveCurrentGame() {
+        val puzzle = board.currentPuzzle ?: return   // still generating: leave the last saved game alone
+        GameStore.save(
+            this,
+            GameSnapshot(
+                size = puzzle.size,
+                solution = puzzle.solution,
+                cells = board.cellStates,
+                crossMode = board.crossMode,
+                solved = solved,
+                elapsedMs = elapsedMs()
+            )
+        )
     }
 
     private fun updateStatus() {

@@ -164,6 +164,27 @@ class NonogramView @JvmOverloads constructor(
         invalidate()
     }
 
+    /** The puzzle currently loaded, if any — used to persist/restore a game in progress. */
+    val currentPuzzle: Puzzle? get() = puzzle
+
+    /** A copy of the current fill/cross marks, in row-major order — safe to persist. */
+    val cellStates: IntArray get() = state.copyOf()
+
+    /**
+     * Restores previously-saved marks onto the puzzle already loaded via [setPuzzle].
+     * [locked] should be true if that saved game was already solved, which keeps the board
+     * showing the finished picture without accepting further input.
+     */
+    fun restoreState(cells: IntArray, locked: Boolean) {
+        if (cells.size != state.size) return
+        removeCallbacks(longPressRunnable)
+        touch = Touch.NONE
+        cells.copyInto(state)
+        inputEnabled = !locked
+        updateSatisfaction()
+        invalidate()
+    }
+
     // =========================================================================================
     // Layout
     // =========================================================================================
